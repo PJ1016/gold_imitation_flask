@@ -1,28 +1,45 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_pymongo import PyMongo
-import os
+from datetime import datetime
+import logging
+from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
 
-# Get Mongo URI from environment variables
-app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+# Enable CORS for all routes
+CORS(app)
+
+# MongoDB URI (Replace with your actual credentials)
+app.config["MONGO_URI"] = "mongodb+srv://praveenjayanth1111:D3NhzVGRqDuovgw8@vsarts.wspap.mongodb.net/vsarts?retryWrites=true&w=majority&tls=true"
 
 # Initialize PyMongo
 mongo = PyMongo(app)
 
-# Define a test route
-@app.route("/add", methods=["POST"])
-def add_user():
-    data = request.json
-    mongo.db.users.insert_one(data)
-    return jsonify({"message": "User added successfully!"}), 201
+# Enable Flask Debugging
+app.config["DEBUG"] = True
 
+# Create a route to test MongoDB connection
 @app.route("/", methods=["GET"])
-def get_users():
-    print(app.config)
-    users = list(mongo.db.users.find({}, {"_id": 0}))
-    return jsonify(users)
+def index():
+    try:
+        # Test MongoDB connection and fetch collections
+        collections = mongo.db.list_collection_names()
+        return jsonify({"message": "Connected to MongoDB!", "collections": collections}), 200
+    except Exception as e:
+        app.logger.error(f"MongoDB Connection Error: {e}")
+        return jsonify({"error": "Failed to connect to MongoDB", "details": str(e)}), 500
 
+@app.route("/getJewelley", methods=["GET"])
+def get_jewelley():
+    try:
+        collection = mongo.db['jewellery']
+        # Fetch all documents from the 'jewellery' collection
+        products = list(collection.find({}, {'_id': 0}))
+        return jsonify(products), 200
+    except Exception as e:
+        app.logger.error(f"MongoDB Fetch Error: {e}")
+        return jsonify({"error": "Failed to fetch documents", "details": str(e)}), 500
+
+# Start the Flask application
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
