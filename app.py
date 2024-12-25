@@ -17,8 +17,9 @@ def add_user():
     mongo.db.users.insert_one(data)
     return jsonify({"message": "User added successfully!"}), 201
 
-@app.route("/users", methods=["GET"])
+@app.route("/", methods=["GET"])
 def get_users():
+    print(app.config)
     users = list(mongo.db.users.find({}, {"_id": 0}))
     return jsonify(users)
 
