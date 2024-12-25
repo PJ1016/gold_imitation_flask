@@ -1,7 +1,6 @@
 from flask import Flask, jsonify
 from flask_pymongo import PyMongo
 from datetime import datetime
-import logging
 from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
