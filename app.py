@@ -20,8 +20,8 @@ mongo = PyMongo(app)
 # AWS S3 Configuration
 S3_BUCKET = os.getenv("S3_BUCKET", "your-default-s3-bucket")
 S3_REGION = os.getenv("S3_REGION", "your-default-region")
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID", "your-default-access-key")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "your-default-secret-key")
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 s3_client = boto3.client(
     "s3",
