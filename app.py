@@ -1,3 +1,4 @@
+import uuid
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from flask_cors import CORS
@@ -46,14 +47,37 @@ def index():
 @app.route("/getJewellery", methods=["GET"])
 def get_jewellery():
     try:
-        collection = mongo.db['jewellery']
-        # Fetch all documents from the 'jewellery' collection
-        products = list(collection.find({}, {'_id': 0}))
+        collection = mongo.db['jewellery_data']
+        count = collection.count_documents({})
+        print(f"Number of documents in collection: {count}")
+        # Fetch all documents from the 'jewellery_data' collection
+        products = list(collection.find({}))
         print(products)
+        for product in products:
+            product['_id'] = str(product['_id'])        
         return jsonify(products), 200
     except Exception as e:
         app.logger.error(f"MongoDB Fetch Error: {e}")
         return jsonify({"error": "Failed to fetch documents", "details": str(e)}), 500
+
+@app.route("/deleteJewellery",methods=["POST"])
+def delete_jewellery():
+    try:
+        collection = mongo.db['jewellery_data']
+        # Get the product ID from the request
+        product_id = request.json.get('id')
+        if not product_id:
+            return jsonify({"error": "Product ID is required"}), 400
+
+        # Delete the product from the collection
+        result = collection.delete_one({"_id": product_id})
+        if result.deleted_count == 0:
+            return jsonify({"error": "Product not found"}), 404
+
+        return jsonify({"message": "Product deleted successfully"}), 200
+    except Exception as e:
+        app.logger.error(f"MongoDB Delete Error: {e}")
+        return jsonify({"error": "Failed to delete product", "details": str(e)}), 500
 
 @app.route("/uploadJewellery", methods=["POST"])
 def upload_jewellery():
@@ -64,7 +88,23 @@ def upload_jewellery():
 
         file = request.files['file']
         name = request.form.get('name')  # Jewellery name
+        description=request.form.get('description')
         category = request.form.get('category')  # Jewellery category
+        material = request.form.get('material')  # Jewellery material
+        stock = request.form.get('stock')  # Jewellery stock
+        price = request.form.get('price')  # Jewellery price
+        discountedPrice = request.form.get('discountedPrice')  # Jewellery discounted price
+        weight=request.form.get('weight')
+    #     formData.append("name", jewelleryName);
+    # formData.append("description", jewelleryDescription);
+    # formData.append("category", jewelleryCategoryData?.value as string);
+    # formData.append("material", material?.value as string);
+    # formData.append("stock", stock);
+    # formData.append("price", price);
+    # formData.append("discountedPrice", discountedPrice);
+    # formData.append("weight", weight);
+    # formData.append("file", productImageUrl[0]);
+
 
         if file.filename == '':
             return jsonify({"error": "No file selected for uploading"}), 400
@@ -89,12 +129,19 @@ def upload_jewellery():
 
         # Store metadata and URL in MongoDB
         jewellery_data = {
+            "productId":123,
             "name": name,
+            "description":description,
+            "material":material,
+            "stock":stock,
+            "price":price,
+            "discountedPrice":discountedPrice,
+            "weight":weight,
             "category": category,
             "imageUrl": file_url,
             "uploadedAt": datetime.utcnow()
         }
-        mongo.db['jewellery'].insert_one(jewellery_data)
+        mongo.db['jewellery_data'].insert_one(jewellery_data)
 
         return jsonify({"message": "File uploaded successfully!", "file_url": file_url}), 201
     except Exception as e:
